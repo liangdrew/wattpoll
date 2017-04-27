@@ -74,7 +74,7 @@ This returns a JSON
     "question": "Who is the coolest?",      
     "total_votes": 1000,
     "user_vote": 1,                     //only returned when userId is passed in
-    "choices": [
+    "choices": [                        //an array with 2-4 elements
         {
             "id": 1,
             "choice": "a",
