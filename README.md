@@ -62,10 +62,10 @@ curl -X POST -d '{
 
 #### GET request to /polls/get to retrieve a poll
 
-`curl "localhost:8081/polls/get?partId=7890userId=100000"`
+`curl "localhost:8081/polls/get?partId=7890username=100000"`
 
 `partId` is required.\
-`userId` is optional - only include if the user is logged in
+`username` is optional - only include if the user is logged in
 
 This returns a JSON
 
@@ -73,7 +73,7 @@ This returns a JSON
 { 
     "question": "Who is the coolest?",      
     "totalVotes": 1000,
-    "userVote": 1,                     //only returned when userId is passed in
+    "userVote": 1,                     //only returned when username is passed in
     "created": "2017-04-27T17:00:35Z",
     "choices": [
         {
@@ -108,6 +108,6 @@ curl -X POST -d '{
     "storyId": "123456",            //optional but good to have
     "partId": "7890",               //required
     "choiceId": 1,                 //required, it's id of the selected choice
-    "userId": 1000                  //optional - only include if user is logged in
+    "username": 1000                  //optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
