@@ -62,7 +62,7 @@ curl -X POST -d '{
 
 #### GET request to /polls/get to retrieve a poll
 
-`curl "localhost:8081/polls/get?partId=7890username=100000"`
+`curl "localhost:8081/polls/get?partId=7890username=namenamename"`
 
 `partId` is required.\
 `username` is optional - only include if the user is logged in
@@ -108,6 +108,6 @@ curl -X POST -d '{
     "storyId": "123456",            //optional but good to have
     "partId": "7890",               //required
     "choiceId": 1,                 //required, it's id of the selected choice
-    "username": 1000                  //optional - only include if user is logged in
+    "username": "namenamename"                  //optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
