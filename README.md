@@ -73,9 +73,10 @@ This returns a JSON
 { 
     "question": "Who is the coolest?",      
     "totalVotes": 1000,
-    "userVote": 1,                     //only returned when username is passed in
+    "userVote": 1,                     //if user is logged in and has voted, id of their voted choice is returned
+                                       //otherwise, 0 is returned
     "created": "2017-04-27T17:00:35Z",
-    "choices": [
+    "choices": [                        //array with 2-4 elements
         {
             "id": 1,
             "choice": "a",
@@ -108,6 +109,6 @@ curl -X POST -d '{
     "storyId": "123456",            //optional but good to have
     "partId": "7890",               //required
     "choiceId": 1,                 //required, it's id of the selected choice
-    "username": "namenamename"                  //optional - only include if user is logged in
+    "username": "namenamename"      //optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
