@@ -41,6 +41,7 @@ You can shut down the server using command `\q`
 ```
 curl -X POST -d '{
     "question": "Who is the coolest?",      //required
+    ""
     "storyId": "123456",                    //optional but good to have
     "partId": "7890",                       //required
     "choices": [                            //required, must have between 2-4 choices
@@ -72,9 +73,10 @@ This returns a JSON
 ```
 { 
     "question": "Who is the coolest?",      
-    "total_votes": 1000,
-    "user_vote": 1,                     //only returned when userId is passed in
-    "choices": [                        //an array with 2-4 elements
+    "totalVotes": 1000,
+    "userVote": 1,                     //only returned when userId is passed in
+    "created": "2017-04-27T17:00:35Z",
+    "choices": [
         {
             "id": 1,
             "choice": "a",
