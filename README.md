@@ -36,16 +36,16 @@ You can shut down the server using command `\q`
 
 ## Sample requests
 
-#### POST request to /polls/create to add a new poll
+#### POST request to /polls/create to create a new poll
 
 ```
 curl -X POST -d '{
-    "question": "Who is the coolest?",
-    "storyId": "123456",
-    "partId": "7890",
-    "choices": [
+    "question": "Who is the coolest?",      //required
+    "storyId": "123456",                    //optional but good to have
+    "partId": "7890",                       //required
+    "choices": [                            //required, must have between 2-4 choices
         {
-            "choice": "a"
+            "choice": "a"                   
         },
         {
             "choice": "b"
@@ -62,14 +62,51 @@ curl -X POST -d '{
 
 #### GET request to /polls/get to retrieve a poll
 
-`curl "localhost:8081/polls/get?partId=7890"`
+`curl "localhost:8081/polls/get?partId=7890userId=100000"`
+
+`partId` is required.\
+`userId` is optional - only include if the user is logged in
+
+This returns a JSON
+
+```
+{ 
+    "question": "Who is the coolest?",      
+    "total_votes": 1000,
+    "user_vote": 1,                     //only returned when userId is passed in
+    "choices": [
+        {
+            "id": 1,
+            "choice": "a",
+            "votes": 100
+        },
+        {
+            "id": 2,
+            "choice": "b",
+            "votes": 200
+        },
+        {
+            "id": 3,
+            "choice": "c",
+            "votes": 300
+        },
+        {
+            "id": 4,
+            "choice": "d",
+            "votes": 400
+        }
+    ]
+}
+
+```
 
 #### POST request to /polls/vote to upload a vote
 
 ```
 curl -X POST -d '{
-    "storyId": "123456",
-    "partId": "7890",
-    "choice": "a"
+    "storyId": "123456",            //optional but good to have
+    "partId": "7890",               //required
+    "choice_id": 1,                 //required, it's id of the selected choice
+    "userId": 1000                  //optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
