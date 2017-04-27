@@ -30,7 +30,7 @@ You'll be prompted to enter the password from step 2.
 
 You could change your password by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'NEW_PASSWORD';`
 
-mySQL commands end with `;`
+You can shut down the server using command `\q`
 
 
 
@@ -63,3 +63,13 @@ curl -X POST -d '{
 #### GET request to /polls/get to retrieve a poll
 
 `curl "localhost:8081/polls/get?partId=7890"`
+
+#### POST request to /polls/vote to upload a vote
+
+```
+curl -X POST -d '{
+    "storyId": "123456",
+    "partId": "7890",
+    "choice": "a"
+}' "localhost:8081/polls/vote"
+```
