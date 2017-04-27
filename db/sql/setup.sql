@@ -22,7 +22,7 @@ CREATE TABLE votes(
   id INT NOT NULL AUTO_INCREMENT,
   part_id VARCHAR(255) NOT NULL,
   username VARCHAR(255),
-  choice_id INT NOT NULL,
+  choice_index INT NOT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (part_id)
 	REFERENCES polls(part_id)
