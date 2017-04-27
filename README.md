@@ -107,7 +107,7 @@ This returns a JSON
 curl -X POST -d '{
     "storyId": "123456",            //optional but good to have
     "partId": "7890",               //required
-    "choice_id": 1,                 //required, it's id of the selected choice
+    "choiceId": 1,                 //required, it's id of the selected choice
     "userId": 1000                  //optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
