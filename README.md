@@ -1,1 +1,65 @@
 # poll-service
+
+## Setup
+
+### Step 1: Clone this repo
+
+You know the drill
+
+### Step 2: Set up Go
+
+```
+brew update
+brew install go
+mkdir -p $HOME/go/src
+export GOPATH=$HOME/go
+```
+
+### Step 3: Download mySQL
+
+From: https://dev.mysql.com/downloads/mysql/
+
+Make sure you select the Max OS X as your operating system.
+
+Remember to save the password given to you at the end of the download.
+
+### Step 4: set up mySQL
+
+After download completes, run `mysql -u root -p` to start the server.\
+You'll be prompted to enter the password from step 2.
+
+You could change your password by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'NEW_PASSWORD';`
+
+mySQL commands end with `;`
+
+
+
+## Sample requests
+
+#### POST request to /polls/create to add a new poll
+
+```
+curl -X POST -d '{
+    "question": "Who is the coolest?",
+    "storyId": "123456",
+    "partId": "7890",
+    "choices": [
+        {
+            "choice": "a"
+        },
+        {
+            "choice": "b"
+        },
+        {
+            "choice": "c"
+        },
+        {
+            "choice": "d"
+        }
+    ]
+}' "localhost:8081/polls/create"
+```
+
+#### GET request to /polls/get to retrieve a poll
+
+`curl "localhost:8081/polls/get?partId=7890"`
