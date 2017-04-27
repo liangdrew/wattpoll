@@ -41,7 +41,6 @@ You can shut down the server using command `\q`
 ```
 curl -X POST -d '{
     "question": "Who is the coolest?",      //required
-    ""
     "storyId": "123456",                    //optional but good to have
     "partId": "7890",                       //required
     "choices": [                            //required, must have between 2-4 choices
