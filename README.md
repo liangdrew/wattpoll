@@ -34,7 +34,7 @@ Create a database named `poll_service`.
 
 ```
 mysql> CREATE DATABASE poll_service;
-mysql> USE DATABASE poll_service;
+mysql> USE poll_service;
 ```
 
 Run `db/sql/setup.sql` to set up your tables.
@@ -54,21 +54,21 @@ Now you're ready to send requests to the service!
 
 ```
 curl -X POST -d '{
-    "question": "Who is the coolest?",      //required
-    "storyId": "123456",                    //optional but good to have
-    "partId": "7890",                       //required
-    "choices": [                            //required, must have between 2-4 choices
+    "question": "Who would you like to see in the next story part?",
+    "storyId": "107474356",
+    "partId": "404628388",
+    "choices": [
         {
-            "choice": "a"                   
+            "choice": "Harry Styles"
         },
         {
-            "choice": "b"
+            "choice": "Rich Poirier"
         },
         {
-            "choice": "c"
+            "choice": "Zayn Malik"
         },
         {
-            "choice": "d"
+            "choice": "Justin Bieber"
         }
     ]
 }' "localhost:8081/polls/create"
@@ -76,7 +76,7 @@ curl -X POST -d '{
 
 #### GET request to /polls/get to retrieve a poll
 
-`curl "localhost:8081/polls/get?partId=7890username=clover"`
+`curl "localhost:8081/polls/get?partId=404628388&username=clover"`
 
 `partId` is required.\
 `username` is optional - only include if the user is logged in
@@ -85,31 +85,31 @@ This returns JSON
 
 ```
 { 
-    "question": "Who is the coolest?",      
-    "totalVotes": 1000,
-    "userVote": 1,                      // If the user is logged in and has voted, ID of their voted choice is returned
+    "question": "Who would you like to see in the next story part?",      
+    "totalVotes": 3,
+    "userVote": 2,                      // If the user is logged in and has voted, ID of their voted choice is returned
                                         // Otherwise, 0 is returned
     "created": "2017-04-27T17:00:35Z",
     "choices": [                        // Array with 2-4 elements
         {
             "id": 1,
-            "choice": "a",
-            "votes": 100
+            "choice": "Harry Styles",
+            "votes": 0
         },
         {
             "id": 2,
-            "choice": "b",
-            "votes": 200
+            "choice": "Rich Poirier",
+            "votes": 2
         },
         {
             "id": 3,
-            "choice": "c",
-            "votes": 300
+            "choice": "Zayn Malik",
+            "votes": 1,
         },
         {
             "id": 4,
-            "choice": "d",
-            "votes": 400
+            "choice": "Justin Bieber",
+            "votes": 0
         }
     ]
 }
@@ -120,9 +120,10 @@ This returns JSON
 
 ```
 curl -X POST -d '{
-    "storyId": "123456",            // Optional but good to have
-    "partId": "7890",               // Required
-    "choiceId": 1,                  // Required, it's id of the selected choice
-    "username": "namenamename"      // Optional - only include if user is logged in
+    "storyId": "107474356",              // Optional but good to have
+    "partId": "404628388",               // Required
+    "choice": "Rich Poirier",            // Required
+    "choiceId": 2,                       // Required, it's id of the selected choice
+    "username": "clover"                 // Optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
