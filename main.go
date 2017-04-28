@@ -230,14 +230,14 @@ func (c *controller) votePoll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *controller) alreadyVoted(req VoteRequest) bool {
-	checkRow, err := c.db.Prepare("SELECT id FROM votes WHERE username = ? AND part_id = ? AND choice_index = ?")
+	checkRow, err := c.db.Prepare("SELECT id FROM votes WHERE username = ? AND part_id = ?")
 	if err != nil {
 		log.Printf("decode err: %s", err)
 	}
 	defer checkRow.Close()
 
 	var id int
-	err = checkRow.QueryRow(req.Username, req.PartID, req.ChoiceIndex).Scan(&id)
+	err = checkRow.QueryRow(req.Username, req.PartID).Scan(&id)
 	if err == sql.ErrNoRows {
 		return false
 	}
