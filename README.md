@@ -127,7 +127,7 @@ curl -X POST -d '{
     "storyId": "107474356",            
     "partId": "404628388",              
     "choice": "Rich Poirier",          
-    "choiceIndex": 3,                       
+    "choiceIndex": 2,                       
     "username": "clover"                 
 }' "localhost:8081/polls/vote"
 ```
