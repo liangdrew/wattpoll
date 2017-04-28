@@ -12,6 +12,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const (
+	address = "localhost"
+	port    = 8081
+)
+
 type VoteRequest struct {
 	StoryID     string `json:"storyId"`
 	PartID      string `json:"partId"`
@@ -67,7 +72,8 @@ func main() {
 	http.HandleFunc("/polls/create", c.createPoll)
 	http.HandleFunc("/polls/get", c.getPoll)
 	http.HandleFunc("/polls/vote", c.votePoll)
-	err := http.ListenAndServe("localhost:8081", nil)
+	fmt.Printf("Service is running at %s:%d ...\n", address, port)
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 	if err != nil {
 		c.logger.Log("ListenAndServe: ", err)
 	}
