@@ -59,6 +59,7 @@ curl -X POST -d '{
     "question": "Who would you like to see in the next story part?",
     "storyId": "107474356",
     "partId": "404628388",
+    "durationDays": 2,
     "choices": [
         {
             "choice": "Harry Styles"
@@ -86,34 +87,35 @@ curl -X POST -d '{
 This returns JSON
 
 ```
-{ 
-    "question": "Who would you like to see in the next story part?",      
-    "totalVotes": 3,
-    "userVote": 2,                      // If the user is logged in and has voted, ID of their voted choice is returned
-                                        // Otherwise, 0 is returned
-    "created": "2017-04-27T17:00:35Z",
-    "choices": [                        // Array with 2-4 elements
-        {
-            "id": 1,
-            "choice": "Harry Styles",
-            "votes": 0
-        },
-        {
-            "id": 2,
-            "choice": "Rich Poirier",
-            "votes": 2
-        },
-        {
-            "id": 3,
-            "choice": "Zayn Malik",
-            "votes": 1,
-        },
-        {
-            "id": 4,
-            "choice": "Justin Bieber",
-            "votes": 0
-        }
-    ]
+{  
+   "question":"Who would you like to see in the next story part?",
+   "totalVotes":1,
+   "userVote":2,
+   "created":"2017-04-28T15:14:51Z",
+   "durationDays":2,
+   "pollClosed":false,
+   "choices":[  
+      {  
+         "id":1,
+         "choice":"Harry Styles",
+         "votes":0
+      },
+      {  
+         "id":2,
+         "choice":"Rich Poirier",
+         "votes":0
+      },
+      {  
+         "id":3,
+         "choice":"Zayn Malik",
+         "votes":0
+      },
+      {  
+         "id":4,
+         "choice":"Justin Bieber",
+         "votes":0
+      }
+   ]
 }
 
 ```
@@ -125,7 +127,7 @@ curl -X POST -d '{
     "storyId": "107474356",            
     "partId": "404628388",              
     "choice": "Rich Poirier",          
-    "choiceId": 2,                       
+    "choiceIndex": 3,                       
     "username": "clover"                 
 }' "localhost:8081/polls/vote"
 ```
