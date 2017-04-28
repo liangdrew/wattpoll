@@ -23,6 +23,7 @@ type Request struct {
 	Question string   `json:"question"`
 	StoryID  string   `json:"storyId"`
 	PartID   string   `json:"partId"`
+	Duration int      `json:"duration"`
 	Choices  []Choice `json:"choices"`
 }
 
@@ -31,6 +32,8 @@ type Response struct {
 	TotalVotes int       `json:"totalVotes"`
 	UserVote   int       `json:"userVote"`
 	Created    time.Time `json:"created"`
+	Duration   int       `json:"duration"`
+	PollClosed bool	     `json:"pollClosed"`
 	Choices    []Choice  `json:"choices"`
 }
 
@@ -108,14 +111,14 @@ func (c *controller) createPoll(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	createPollStmt, err := c.db.Prepare("INSERT polls SET created=?, question=?, story_id=?, part_id=?")
+	createPollStmt, err := c.db.Prepare("INSERT polls SET created=?, question=?, story_id=?, part_id=?, duration=?")
 	if err != nil {
 		log.Printf("err: %s", err)
 	}
 	defer createPollStmt.Close()
 
-	datetime := time.Now().UTC()
-	_, err = createPollStmt.Exec(datetime, req.Question, req.StoryID, req.PartID)
+	dateNow := time.Now().UTC()
+	_, err = createPollStmt.Exec(dateNow, req.Question, req.StoryID, req.PartID, req.Duration)
 	if err != nil {
 		log.Printf("err: %s", err)
 	}
@@ -139,16 +142,25 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 
 	var resp Response
-	getPollStmt, err := c.db.Prepare("SELECT question, created FROM polls WHERE part_id = ?")
+	getPollStmt, err := c.db.Prepare("SELECT question, created, duration FROM polls WHERE part_id = ?")
 	if err != nil {
 		log.Printf("err: %s", err)
 	}
 	defer getPollStmt.Close()
 
-	err = getPollStmt.QueryRow(partID).Scan(&resp.Question, &resp.Created)
+	err = getPollStmt.QueryRow(partID).Scan(&resp.Question, &resp.Created, &resp.Duration)
 	if err != nil {
 		log.Printf("err: %s", err)
 	}
+
+	dateNow := time.Now().UTC()
+	createDate, err := time.Parse(dateNow.String(), resp.Created.String())
+	if err != nil {
+		log.Printf("err: %s", err)
+	}
+	endDate := createDate.AddDate(0,0, resp.Duration)
+	pollClosed := dateNow.After(endDate)
+	resp.PollClosed = pollClosed
 
 	getUserVoteStmt, err := c.db.Prepare("SELECT choice_index FROM votes WHERE part_id = ? AND username = ?")
 	if err != nil {
