@@ -3,6 +3,7 @@ CREATE TABLE polls(
   story_id VARCHAR(255) NOT NULL,
   part_id VARCHAR(255) NOT NULL,
   created TIMESTAMP,
+  duration_days INT NOT NULL,
   PRIMARY KEY (part_id)
 );
 
