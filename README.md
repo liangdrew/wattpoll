@@ -2,14 +2,13 @@
 
 [![Build Status](https://travis-ci.com/liangdrew/poll-service.svg?token=Ei3Bep18wxjyohCTAiSA&branch=master)](https://travis-ci.org/liangdrew/poll-service)
 
-A Go microservice which supports the integration of polls in story parts within the Wattpad app. Created for Wattpad's April 2017 Hackathon.
+A Go microservice which supports the integration of polls in story parts within the [Wattpad](https://www.wattpad.com) app. Created for Wattpad's April 2017 Hackathon.
 
 ## Setup
 
 ### Step 1: Set up Go
 
 ```bash
-$ brew update
 $ brew install go
 $ mkdir -p $HOME/go/src
 $ export GOPATH=$HOME/go
