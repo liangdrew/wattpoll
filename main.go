@@ -4,37 +4,37 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/go-kit/kit/log"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type VoteRequest struct {
 	StoryID     string `json:"storyId"`
 	PartID      string `json:"partId"`
-	Choice      string `json:"choice"`
 	ChoiceIndex int    `json:"choiceIndex"`
 	Username    string `json:"username"`
 }
 
 type Request struct {
-	Question 	string   `json:"question"`
-	StoryID  	string   `json:"storyId"`
-	PartID   	string   `json:"partId"`
-	DurationDays    int  	 `json:"durationDays"`
-	Choices  	[]Choice `json:"choices"`
+	Question     string   `json:"question"`
+	StoryID      string   `json:"storyId"`
+	PartID       string   `json:"partId"`
+	DurationDays int      `json:"durationDays"`
+	Choices      []Choice `json:"choices"`
 }
 
 type Response struct {
-	Question   	string    `json:"question"`
-	TotalVotes 	int       `json:"totalVotes"`
-	UserVote   	int       `json:"userVote"`
-	Created    	time.Time `json:"created"`
-	DurationDays    int   	  `json:"durationDays"`
-	PollClosed 	bool	  `json:"pollClosed"`
-	Choices    	[]Choice  `json:"choices"`
+	Question     string    `json:"question"`
+	TotalVotes   int       `json:"totalVotes"`
+	UserVote     int       `json:"userVote"`
+	Created      time.Time `json:"created"`
+	DurationDays int       `json:"durationDays"`
+	PollClosed   bool      `json:"pollClosed"`
+	Choices      []Choice  `json:"choices"`
 }
 
 type PostResponse struct {
@@ -48,17 +48,20 @@ type Choice struct {
 }
 
 type controller struct {
-	db *sql.DB
+	db     *sql.DB
+	logger log.Logger
 }
 
-func newController(db *sql.DB) *controller {
+func newController(l log.Logger) *controller {
 	return &controller{
-		db: db,
+		logger: l,
 	}
 }
 
 func main() {
-	c := newController(getDB())
+	l := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	c := newController(l)
+	c.getDB()
 	defer c.db.Close()
 	http.HandleFunc("/health", c.healthCheck)
 	http.HandleFunc("/polls/create", c.createPoll)
@@ -66,7 +69,7 @@ func main() {
 	http.HandleFunc("/polls/vote", c.votePoll)
 	err := http.ListenAndServe("localhost:8081", nil)
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		c.logger.Log("ListenAndServe: ", err)
 	}
 }
 
@@ -74,38 +77,38 @@ func (c *controller) healthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "OK")
 }
 
-func getDB() *sql.DB {
+func (c *controller) getDB() {
 	// Test connection to db
 	db, err := sql.Open("mysql", "root:root@/poll_service?parseTime=true")
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 
 	// Open doesn't open a connection. Validate DSN data:
 	err = db.Ping()
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
-	return db
+	c.db = db
 }
 
-func writePostResponse(w http.ResponseWriter, r PostResponse) {
+func (c *controller) writePostResponse(w http.ResponseWriter, r PostResponse) {
 	d, err := json.Marshal(r)
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	w.Write(d)
 }
 
 func (c *controller) createPoll(w http.ResponseWriter, r *http.Request) {
 	var resp PostResponse
-	defer func() { writePostResponse(w, resp) }()
+	defer func() { c.writePostResponse(w, resp) }()
 	// Read and decode request body
 	var req Request
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		log.Printf("decode err: %s", err)
+		c.logger.Log("decode err: %s", err)
 		resp.Status = http.StatusBadRequest
 		return
 	}
@@ -113,25 +116,25 @@ func (c *controller) createPoll(w http.ResponseWriter, r *http.Request) {
 
 	createPollStmt, err := c.db.Prepare("INSERT polls SET created=?, question=?, story_id=?, part_id=?, duration_days=?")
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	defer createPollStmt.Close()
 
 	dateNow := time.Now().UTC()
 	_, err = createPollStmt.Exec(dateNow, req.Question, req.StoryID, req.PartID, req.DurationDays)
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 
 	createChoicesStmt, err := c.db.Prepare("INSERT INTO choices (choice, choice_index, votes, part_id) VALUES (?, ?, ?, ?)")
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	defer createChoicesStmt.Close()
-	for i, c := range req.Choices {
-		_, err = createChoicesStmt.Exec(c.Choice, i+1, 0, req.PartID)
+	for i, choice := range req.Choices {
+		_, err = createChoicesStmt.Exec(choice.Choice, i+1, 0, req.PartID)
 		if err != nil {
-			log.Printf("err: %s", err)
+			c.logger.Log("err: %s", err)
 		}
 	}
 	resp.Status = http.StatusOK
@@ -144,13 +147,13 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	var resp Response
 	getPollStmt, err := c.db.Prepare("SELECT question, created, duration_days FROM polls WHERE part_id = ?")
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	defer getPollStmt.Close()
 
 	err = getPollStmt.QueryRow(partID).Scan(&resp.Question, &resp.Created, &resp.DurationDays)
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 
 	endDate := resp.Created.AddDate(0, 0, resp.DurationDays)
@@ -158,20 +161,20 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 
 	getUserVoteStmt, err := c.db.Prepare("SELECT choice_index FROM votes WHERE part_id = ? AND username = ?")
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	defer getUserVoteStmt.Close()
 
 	var userVote int
 	err = getUserVoteStmt.QueryRow(partID, username).Scan(&userVote)
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	resp.UserVote = userVote
 
 	getChoicesStmt, err := c.db.Prepare("SELECT choice, votes FROM choices WHERE part_id = ? AND choice_index = ?")
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 	defer getChoicesStmt.Close()
 
@@ -180,7 +183,7 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 		var choice Choice
 		err = getChoicesStmt.QueryRow(partID, i).Scan(&choice.Choice, &choice.Votes)
 		if err != nil {
-			log.Printf("err: %s", err)
+			c.logger.Log("err: %s", err)
 		}
 		choice.ID = i
 		totalVotes += choice.Votes
@@ -190,7 +193,7 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	resp.TotalVotes = totalVotes
 	d, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("err: %s", err)
+		c.logger.Log("err: %s", err)
 	}
 
 	w.Write(d)
@@ -198,38 +201,38 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 
 func (c *controller) votePoll(w http.ResponseWriter, r *http.Request) {
 	var resp PostResponse
-	defer func() { writePostResponse(w, resp) }()
+	defer func() { c.writePostResponse(w, resp) }()
 	var req VoteRequest
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		log.Printf("decode err: %s", err)
+		c.logger.Log("decode err: %s", err)
 		resp.Status = http.StatusBadRequest
 		return
 	}
 	defer r.Body.Close()
 
 	if !c.alreadyVoted(req) {
-		voteStmt, err := c.db.Prepare("UPDATE choices SET votes = votes + 1 WHERE part_id = ? AND choice = ? AND choice_index = ?")
+		voteStmt, err := c.db.Prepare("UPDATE choices SET votes = votes + 1 WHERE part_id = ? AND choice_index = ?")
 		if err != nil {
-			log.Printf("err: %s", err)
+			c.logger.Log("err: %s", err)
 		}
 		defer voteStmt.Close()
 
-		_, err = voteStmt.Exec(req.PartID, req.Choice, req.ChoiceIndex)
+		_, err = voteStmt.Exec(req.PartID, req.ChoiceIndex)
 		if err != nil {
-			log.Printf("err: %s", err)
+			c.logger.Log("err: %s", err)
 		}
 
 		trackVoteStmt, err := c.db.Prepare("INSERT INTO votes (part_id, choice_index, username) VALUES (?, ?, ?)")
 		if err != nil {
-			log.Printf("err: %s", err)
+			c.logger.Log("err: %s", err)
 		}
 		defer trackVoteStmt.Close()
 
 		_, err = trackVoteStmt.Exec(req.PartID, req.ChoiceIndex, req.Username)
 		if err != nil {
-			log.Printf("err: %s", err)
+			c.logger.Log("err: %s", err)
 		}
 	}
 	resp.Status = http.StatusOK
@@ -238,7 +241,7 @@ func (c *controller) votePoll(w http.ResponseWriter, r *http.Request) {
 func (c *controller) alreadyVoted(req VoteRequest) bool {
 	checkRow, err := c.db.Prepare("SELECT id FROM votes WHERE username = ? AND part_id = ?")
 	if err != nil {
-		log.Printf("decode err: %s", err)
+		c.logger.Log("decode err: %s", err)
 	}
 	defer checkRow.Close()
 
@@ -248,7 +251,7 @@ func (c *controller) alreadyVoted(req VoteRequest) bool {
 		return false
 	}
 	if err != nil {
-		log.Printf("decode err: %s", err)
+		c.logger.Log("decode err: %s", err)
 	}
 	return true
 }
