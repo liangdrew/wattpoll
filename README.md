@@ -26,11 +26,27 @@ Remember to save the temporary password given to you at the end of the download.
 ### Step 4: Set up MySQL
 
 After download completes, run `mysql -u root -p` to connect to the server.\
-You'll be prompted to enter the password from step 3.
+You'll be prompted to enter the temporary password from step 3.
 
-You could change your password by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'NEW_PASSWORD';`
+Change your password by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'NEW_PASSWORD';`
 
-You can shut down the server using command `\q`
+Create a database named `poll_service`.
+
+```
+mysql> CREATE DATABASE poll_service;
+mysql> USE DATABASE poll_service;
+```
+
+Run `db/sql/setup.sql` to set up your tables.
+
+### Step 5: Run the service locally
+
+```
+$ cd $GOPATH/poll-service
+$ go run main.go
+```
+
+Now you're ready to send requests to the service!
 
 ## Sample requests
 
