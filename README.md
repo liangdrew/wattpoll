@@ -128,8 +128,7 @@ This returns JSON
 curl -X POST -d '{
     "storyId": "107474356",            
     "partId": "404628388",              
-    "choice": "Rich Poirier",          
-    "choiceIndex": 2,                       
+    "choiceIndex": 1,                       
     "username": "clover"                 
 }' "localhost:8081/polls/vote"
 ```

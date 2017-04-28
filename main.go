@@ -15,7 +15,6 @@ import (
 type VoteRequest struct {
 	StoryID     string `json:"storyId"`
 	PartID      string `json:"partId"`
-	Choice      string `json:"choice"`
 	ChoiceIndex int    `json:"choiceIndex"`
 	Username    string `json:"username"`
 }
@@ -214,13 +213,13 @@ func (c *controller) votePoll(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if !c.alreadyVoted(req) {
-		voteStmt, err := c.db.Prepare("UPDATE choices SET votes = votes + 1 WHERE part_id = ? AND choice = ? AND choice_index = ?")
+		voteStmt, err := c.db.Prepare("UPDATE choices SET votes = votes + 1 WHERE part_id = ? AND choice_index = ?")
 		if err != nil {
 			c.logger.Log("err: %s", err)
 		}
 		defer voteStmt.Close()
 
-		_, err = voteStmt.Exec(req.PartID, req.Choice, req.ChoiceIndex)
+		_, err = voteStmt.Exec(req.PartID, req.ChoiceIndex)
 		if err != nil {
 			c.logger.Log("err: %s", err)
 		}
