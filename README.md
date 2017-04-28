@@ -1,5 +1,7 @@
 # poll-service
 
+A Go microservice which supports the integration of polls in story parts within the Wattpad app. Created for Wattpad's April 2017 Hackathon.
+
 ## Setup
 
 ### Step 1: Set up Go
@@ -37,7 +39,7 @@ mysql> CREATE DATABASE poll_service;
 mysql> USE poll_service;
 ```
 
-Run `db/sql/setup.sql` to set up your tables.
+Run [setup.sql](https://github.com/liangdrew/poll-service/blob/master/db/sql/setup.sql) in the MySQL shell to set up your tables.
 
 ### Step 5: Run the service locally
 
@@ -120,10 +122,10 @@ This returns JSON
 
 ```
 curl -X POST -d '{
-    "storyId": "107474356",              // Optional but good to have
+    "storyId": "107474356",              // Optional, but good to have
     "partId": "404628388",               // Required
     "choice": "Rich Poirier",            // Required
-    "choiceId": 2,                       // Required, it's id of the selected choice
+    "choiceId": 2,                       // Required, it is the ID of the selected choice
     "username": "clover"                 // Optional - only include if user is logged in
 }' "localhost:8081/polls/vote"
 ```
