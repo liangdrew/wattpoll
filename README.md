@@ -6,7 +6,7 @@ A Go microservice which supports the integration of polls in story parts within 
 
 ### Step 1: Set up Go
 
-```
+```bash
 $ brew update
 $ brew install go
 $ mkdir -p $HOME/go/src
@@ -14,7 +14,7 @@ $ export GOPATH=$HOME/go
 ```
 
 ### Step 2: Clone this repo
-```
+```bash
 $ cd $GOPATH
 $ git clone https://github.com/liangdrew/poll-service
 ```
@@ -34,7 +34,7 @@ Change your password by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'NE
 
 Create a database named `poll_service`.
 
-```
+```bash
 mysql> CREATE DATABASE poll_service;
 mysql> USE poll_service;
 ```
@@ -43,7 +43,7 @@ Run [setup.sql](https://github.com/liangdrew/poll-service/blob/master/db/sql/set
 
 ### Step 5: Run the service locally
 
-```
+```bash
 $ cd $GOPATH/poll-service
 $ go run main.go
 ```
@@ -54,7 +54,7 @@ Now you're ready to send requests to the service!
 
 #### POST request to /polls/create to create a new poll
 
-```
+```bash
 curl -X POST -d '{
     "question": "Who would you like to see in the next story part?",
     "storyId": "107474356",
@@ -120,12 +120,12 @@ This returns JSON
 
 #### POST request to /polls/vote to a vote on a poll
 
-```
+```bash
 curl -X POST -d '{
-    "storyId": "107474356",              // Optional, but good to have
-    "partId": "404628388",               // Required
-    "choice": "Rich Poirier",            // Required
-    "choiceId": 2,                       // Required, it is the ID of the selected choice
-    "username": "clover"                 // Optional - only include if user is logged in
+    "storyId": "107474356",            
+    "partId": "404628388",              
+    "choice": "Rich Poirier",          
+    "choiceId": 2,                       
+    "username": "clover"                 
 }' "localhost:8081/polls/vote"
 ```
