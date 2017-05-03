@@ -1,0 +1,12 @@
+# pack-refs with: peeled fully-peeled 
+04125d6d35a275897e1545fe8fc9aa46f426d2c6 refs/remotes/origin/coveralls-on-travis
+2e9235c30d831fd67ca4fdccbd093adf119d9d13 refs/remotes/origin/json-log
+6777c8bc843bf2cad6716397483e359f7e181d8d refs/remotes/origin/kitgen
+0873e56b0faeae3a1d661b10d629135508ea5504 refs/remotes/origin/master
+9e12b2d2111d2ac73e067afc84535f77c1f33851 refs/remotes/origin/pubsub
+2a348cc41662e402da909dd91146435171d44bbc refs/remotes/origin/sync-log
+12508679d6601843bacae19be6a8f0e84c8b19ed refs/tags/v0.1.0
+6fb874ce59bb45b2f60ee3d289829db02142ecc6 refs/tags/v0.2.0
+cc097dca15665f80f522271b959b3278dc631642 refs/tags/v0.3.0
+^f66b0e13579bfc5a48b9e2a94b1209c107ea1f41
+fadad6fffe0466b19df9efd9acde5c9a52df5fa4 refs/tags/v0.4.0

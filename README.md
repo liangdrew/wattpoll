@@ -1,6 +1,6 @@
 # poll-service
 
-[![Build Status](https://travis-ci.com/liangdrew/poll-service.svg?token=Ei3Bep18wxjyohCTAiSA&branch=master)](https://travis-ci.org/liangdrew/poll-service)
+[![Build Status](https://travis-ci.com/liangdrew/poll-service.svg?token=Ei3Bep18wxjyohCTAiSA&branch=master)](https://travis-ci.com/liangdrew/poll-service)
 
 A Go microservice which supports the integration of polls in story parts within the [Wattpad](https://www.wattpad.com) app. Created for Wattpad's April 2017 Hackathon.
 
@@ -18,6 +18,8 @@ $ export GOPATH=$HOME/go
 ```bash
 $ cd $GOPATH
 $ git clone https://github.com/liangdrew/poll-service
+$ cd poll-service
+$ export GOPATH=$GOPATH:`pwd`/vendor
 ```
 
 ### Step 3: Download MySQL
