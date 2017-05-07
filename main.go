@@ -13,52 +13,14 @@ import (
 )
 
 const (
-	address = "localhost"
-	port    = 8081
+	address      = "localhost"
+	port         = 8081
+	errTag       = "err: %s"
+	decodeErrTag = "decode err: %s"
 )
 
-type VoteRequest struct {
-	StoryID     string `json:"storyId"`
-	PartID      string `json:"partId"`
-	ChoiceIndex int    `json:"choiceIndex"`
-	Username    string `json:"username"`
-}
-
-type Request struct {
-	Question     string   `json:"question"`
-	StoryID      string   `json:"storyId"`
-	PartID       string   `json:"partId"`
-	DurationDays int      `json:"durationDays"`
-	Choices      []Choice `json:"choices"`
-}
-
-type Response struct {
-	Question     string    `json:"question"`
-	TotalVotes   int       `json:"totalVotes"`
-	UserVote     int       `json:"userVote"`
-	Created      time.Time `json:"created"`
-	DurationDays int       `json:"durationDays"`
-	PollClosed   bool      `json:"pollClosed"`
-	Choices      []Choice  `json:"choices"`
-}
-
-type PostResponse struct {
-	Status int `json:"status"`
-}
-
-type Choice struct {
-	ID     int    `json:"id"`
-	Choice string `json:"choice"`
-	Votes  int    `json:"votes"`
-}
-
-type controller struct {
-	db     *sql.DB
-	logger log.Logger
-}
-
-func newController(l log.Logger) *controller {
-	return &controller{
+func newController(l log.Logger) *Controller {
+	return &Controller{
 		logger: l,
 	}
 }
@@ -79,34 +41,34 @@ func main() {
 	}
 }
 
-func (c *controller) healthCheck(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) healthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "OK")
 }
 
-func (c *controller) getDB() {
+func (c *Controller) getDB() {
 	// Test connection to db
 	db, err := sql.Open("mysql", "root:root@/poll_service?parseTime=true")
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 
 	// Open doesn't open a connection. Validate DSN data:
 	err = db.Ping()
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	c.db = db
 }
 
-func (c *controller) writePostResponse(w http.ResponseWriter, r PostResponse) {
+func (c *Controller) writePostResponse(w http.ResponseWriter, r PostResponse) {
 	d, err := json.Marshal(r)
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	w.Write(d)
 }
 
-func (c *controller) createPoll(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) createPoll(w http.ResponseWriter, r *http.Request) {
 	var resp PostResponse
 	defer func() { c.writePostResponse(w, resp) }()
 	// Read and decode request body
@@ -114,7 +76,7 @@ func (c *controller) createPoll(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		c.logger.Log("decode err: %s", err)
+		c.logger.Log(decodeErrTag, err)
 		resp.Status = http.StatusBadRequest
 		return
 	}
@@ -122,44 +84,44 @@ func (c *controller) createPoll(w http.ResponseWriter, r *http.Request) {
 
 	createPollStmt, err := c.db.Prepare("INSERT polls SET created=?, question=?, story_id=?, part_id=?, duration_days=?")
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	defer createPollStmt.Close()
 
 	dateNow := time.Now().UTC()
 	_, err = createPollStmt.Exec(dateNow, req.Question, req.StoryID, req.PartID, req.DurationDays)
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 
 	createChoicesStmt, err := c.db.Prepare("INSERT INTO choices (choice, choice_index, votes, part_id) VALUES (?, ?, ?, ?)")
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	defer createChoicesStmt.Close()
 	for i, choice := range req.Choices {
 		_, err = createChoicesStmt.Exec(choice.Choice, i+1, 0, req.PartID)
 		if err != nil {
-			c.logger.Log("err: %s", err)
+			c.logger.Log(errTag, err)
 		}
 	}
 	resp.Status = http.StatusOK
 }
 
-func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	partID := r.URL.Query().Get("partId")
 	username := r.URL.Query().Get("username")
 
 	var resp Response
 	getPollStmt, err := c.db.Prepare("SELECT question, created, duration_days FROM polls WHERE part_id = ?")
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	defer getPollStmt.Close()
 
 	err = getPollStmt.QueryRow(partID).Scan(&resp.Question, &resp.Created, &resp.DurationDays)
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 
 	endDate := resp.Created.AddDate(0, 0, resp.DurationDays)
@@ -167,20 +129,20 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 
 	getUserVoteStmt, err := c.db.Prepare("SELECT choice_index FROM votes WHERE part_id = ? AND username = ?")
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	defer getUserVoteStmt.Close()
 
 	var userVote int
 	err = getUserVoteStmt.QueryRow(partID, username).Scan(&userVote)
 	if err != nil && err != sql.ErrNoRows {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	resp.UserVote = userVote
 
 	getChoicesStmt, err := c.db.Prepare("SELECT choice, votes FROM choices WHERE part_id = ? AND choice_index = ?")
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 	defer getChoicesStmt.Close()
 
@@ -189,7 +151,7 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 		var choice Choice
 		err = getChoicesStmt.QueryRow(partID, i).Scan(&choice.Choice, &choice.Votes)
 		if err != nil {
-			c.logger.Log("err: %s", err)
+			c.logger.Log(errTag, err)
 		}
 		choice.ID = i
 		totalVotes += choice.Votes
@@ -199,55 +161,58 @@ func (c *controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	resp.TotalVotes = totalVotes
 	d, err := json.Marshal(resp)
 	if err != nil {
-		c.logger.Log("err: %s", err)
+		c.logger.Log(errTag, err)
 	}
 
 	w.Write(d)
 }
 
-func (c *controller) votePoll(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) votePoll(w http.ResponseWriter, r *http.Request) {
 	var resp PostResponse
 	defer func() { c.writePostResponse(w, resp) }()
 	var req VoteRequest
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
-		c.logger.Log("decode err: %s", err)
+		c.logger.Log(decodeErrTag, err)
 		resp.Status = http.StatusBadRequest
 		return
 	}
 	defer r.Body.Close()
 
-	if !c.alreadyVoted(req) {
-		voteStmt, err := c.db.Prepare("UPDATE choices SET votes = votes + 1 WHERE part_id = ? AND choice_index = ?")
-		if err != nil {
-			c.logger.Log("err: %s", err)
-		}
-		defer voteStmt.Close()
+	if c.alreadyVoted(req) {
+		resp.Status = http.StatusOK
+		return
+	}
 
-		_, err = voteStmt.Exec(req.PartID, req.ChoiceIndex)
-		if err != nil {
-			c.logger.Log("err: %s", err)
-		}
+	voteStmt, err := c.db.Prepare("UPDATE choices SET votes = votes + 1 WHERE part_id = ? AND choice_index = ?")
+	if err != nil {
+		c.logger.Log(errTag, err)
+	}
+	defer voteStmt.Close()
 
-		trackVoteStmt, err := c.db.Prepare("INSERT INTO votes (part_id, choice_index, username) VALUES (?, ?, ?)")
-		if err != nil {
-			c.logger.Log("err: %s", err)
-		}
-		defer trackVoteStmt.Close()
+	_, err = voteStmt.Exec(req.PartID, req.ChoiceIndex)
+	if err != nil {
+		c.logger.Log(errTag, err)
+	}
 
-		_, err = trackVoteStmt.Exec(req.PartID, req.ChoiceIndex, req.Username)
-		if err != nil {
-			c.logger.Log("err: %s", err)
-		}
+	trackVoteStmt, err := c.db.Prepare("INSERT INTO votes (part_id, choice_index, username) VALUES (?, ?, ?)")
+	if err != nil {
+		c.logger.Log(errTag, err)
+	}
+	defer trackVoteStmt.Close()
+
+	_, err = trackVoteStmt.Exec(req.PartID, req.ChoiceIndex, req.Username)
+	if err != nil {
+		c.logger.Log(errTag, err)
 	}
 	resp.Status = http.StatusOK
 }
 
-func (c *controller) alreadyVoted(req VoteRequest) bool {
+func (c *Controller) alreadyVoted(req VoteRequest) bool {
 	checkRow, err := c.db.Prepare("SELECT id FROM votes WHERE username = ? AND part_id = ?")
 	if err != nil {
-		c.logger.Log("decode err: %s", err)
+		c.logger.Log(decodeErrTag, err)
 	}
 	defer checkRow.Close()
 
@@ -257,7 +222,7 @@ func (c *controller) alreadyVoted(req VoteRequest) bool {
 		return false
 	}
 	if err != nil {
-		c.logger.Log("decode err: %s", err)
+		c.logger.Log(decodeErrTag, err)
 	}
 	return true
 }
