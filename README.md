@@ -1,6 +1,6 @@
-# poll-service
+# wattpoll
 
-[![Build Status](https://travis-ci.com/liangdrew/poll-service.svg?token=Ei3Bep18wxjyohCTAiSA&branch=master)](https://travis-ci.com/liangdrew/poll-service)
+[![Build Status](https://travis-ci.com/liangdrew/wattpoll.svg?token=Ei3Bep18wxjyohCTAiSA&branch=master)](https://travis-ci.com/liangdrew/wattpoll)
 
 A Go microservice which supports the integration of polls in story parts within the [Wattpad](https://www.wattpad.com) app.
 
@@ -19,8 +19,8 @@ $ export GOPATH=$HOME/go
 ### Step 2: Clone this repo
 ```bash
 $ cd $GOPATH
-$ git clone https://github.com/liangdrew/poll-service
-$ cd poll-service
+$ git clone https://github.com/liangdrew/wattpoll
+$ cd wattpoll
 $ export GOPATH=$GOPATH:`pwd`/vendor
 ```
 
@@ -37,19 +37,19 @@ You'll be prompted to enter the temporary password from step 3.
 
 Change your password by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'NEW_PASSWORD';`
 
-Create a database named `poll_service`.
+Create a database named `wattpoll`.
 
 ```bash
-mysql> CREATE DATABASE poll_service;
-mysql> USE poll_service;
+mysql> CREATE DATABASE wattpoll;
+mysql> USE wattpoll;
 ```
 
-Run [setup.sql](https://github.com/liangdrew/poll-service/blob/master/db/sql/setup.sql) in the MySQL shell to set up your tables.
+Run [setup.sql](https://github.com/liangdrew/wattpoll/blob/master/db/sql/setup.sql) in the MySQL shell to set up your tables.
 
 ### Step 5: Run the service locally
 
 ```bash
-$ cd $GOPATH/poll-service
+$ cd $GOPATH/wattpoll
 $ go run main.go
 ```
 
