@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/rubyist/circuitbreaker"
 )
 
 type VoteRequest struct {
@@ -43,6 +44,7 @@ type Choice struct {
 }
 
 type Controller struct {
-	db     *sql.DB
-	logger log.Logger
+	db      *sql.DB
+	breaker *circuit.Breaker
+	logger  log.Logger
 }

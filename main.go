@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/rubyist/circuitbreaker"
 )
 
 const (
@@ -21,7 +22,8 @@ const (
 
 func newController(l log.Logger) *Controller {
 	return &Controller{
-		logger: l,
+		breaker: circuit.NewRateBreaker(0.9, 100),
+		logger:  l,
 	}
 }
 
@@ -69,6 +71,9 @@ func (c *Controller) writePostResponse(w http.ResponseWriter, r PostResponse) {
 }
 
 func (c *Controller) createPoll(w http.ResponseWriter, r *http.Request) {
+	if !c.breaker.Ready() {
+		return
+	}
 	var resp PostResponse
 	defer func() { c.writePostResponse(w, resp) }()
 	// Read and decode request body
@@ -91,7 +96,10 @@ func (c *Controller) createPoll(w http.ResponseWriter, r *http.Request) {
 	dateNow := time.Now().UTC()
 	_, err = createPollStmt.Exec(dateNow, req.Question, req.StoryID, req.PartID, req.DurationDays)
 	if err != nil {
+		c.breaker.Fail()
 		c.logger.Log(errTag, err)
+	} else {
+		c.breaker.Success()
 	}
 
 	createChoicesStmt, err := c.db.Prepare("INSERT INTO choices (choice, choice_index, votes, part_id) VALUES (?, ?, ?, ?)")
@@ -102,13 +110,19 @@ func (c *Controller) createPoll(w http.ResponseWriter, r *http.Request) {
 	for i, choice := range req.Choices {
 		_, err = createChoicesStmt.Exec(choice.Choice, i+1, 0, req.PartID)
 		if err != nil {
+			c.breaker.Fail()
 			c.logger.Log(errTag, err)
+		} else {
+			c.breaker.Success()
 		}
 	}
 	resp.Status = http.StatusOK
 }
 
 func (c *Controller) getPoll(w http.ResponseWriter, r *http.Request) {
+	if !c.breaker.Ready() {
+		return
+	}
 	partID := r.URL.Query().Get("partId")
 	username := r.URL.Query().Get("username")
 
@@ -121,7 +135,10 @@ func (c *Controller) getPoll(w http.ResponseWriter, r *http.Request) {
 
 	err = getPollStmt.QueryRow(partID).Scan(&resp.Question, &resp.Created, &resp.DurationDays)
 	if err != nil {
+		c.breaker.Fail()
 		c.logger.Log(errTag, err)
+	} else {
+		c.breaker.Success()
 	}
 
 	endDate := resp.Created.AddDate(0, 0, resp.DurationDays)
@@ -136,7 +153,10 @@ func (c *Controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	var userVote int
 	err = getUserVoteStmt.QueryRow(partID, username).Scan(&userVote)
 	if err != nil && err != sql.ErrNoRows {
+		c.breaker.Fail()
 		c.logger.Log(errTag, err)
+	} else {
+		c.breaker.Success()
 	}
 	resp.UserVote = userVote
 
@@ -150,9 +170,7 @@ func (c *Controller) getPoll(w http.ResponseWriter, r *http.Request) {
 	for i := 1; i < 5; i++ {
 		var choice Choice
 		err = getChoicesStmt.QueryRow(partID, i).Scan(&choice.Choice, &choice.Votes)
-		if err != nil {
-			c.logger.Log(errTag, err)
-		}
+		c.updateBreaker(err)
 		choice.ID = i
 		totalVotes += choice.Votes
 		resp.Choices = append(resp.Choices, choice)
@@ -168,6 +186,9 @@ func (c *Controller) getPoll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) votePoll(w http.ResponseWriter, r *http.Request) {
+	if !c.breaker.Ready() {
+		return
+	}
 	var resp PostResponse
 	defer func() { c.writePostResponse(w, resp) }()
 	var req VoteRequest
@@ -192,9 +213,7 @@ func (c *Controller) votePoll(w http.ResponseWriter, r *http.Request) {
 	defer voteStmt.Close()
 
 	_, err = voteStmt.Exec(req.PartID, req.ChoiceIndex)
-	if err != nil {
-		c.logger.Log(errTag, err)
-	}
+	c.updateBreaker(err)
 
 	trackVoteStmt, err := c.db.Prepare("INSERT INTO votes (part_id, choice_index, username) VALUES (?, ?, ?)")
 	if err != nil {
@@ -203,16 +222,14 @@ func (c *Controller) votePoll(w http.ResponseWriter, r *http.Request) {
 	defer trackVoteStmt.Close()
 
 	_, err = trackVoteStmt.Exec(req.PartID, req.ChoiceIndex, req.Username)
-	if err != nil {
-		c.logger.Log(errTag, err)
-	}
+	c.updateBreaker(err)
 	resp.Status = http.StatusOK
 }
 
 func (c *Controller) alreadyVoted(req VoteRequest) bool {
 	checkRow, err := c.db.Prepare("SELECT id FROM votes WHERE username = ? AND part_id = ?")
 	if err != nil {
-		c.logger.Log(decodeErrTag, err)
+		c.logger.Log(errTag, err)
 	}
 	defer checkRow.Close()
 
@@ -221,8 +238,15 @@ func (c *Controller) alreadyVoted(req VoteRequest) bool {
 	if err == sql.ErrNoRows {
 		return false
 	}
-	if err != nil {
-		c.logger.Log(decodeErrTag, err)
-	}
+	c.updateBreaker(err)
 	return true
+}
+
+func (c *Controller) updateBreaker(err error) {
+	if err != nil {
+		c.breaker.Fail()
+		c.logger.Log(errTag, err)
+	} else {
+		c.breaker.Success()
+	}
 }

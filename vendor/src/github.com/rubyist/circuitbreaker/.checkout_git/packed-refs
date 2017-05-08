@@ -1,0 +1,20 @@
+# pack-refs with: peeled fully-peeled 
+0051d183990e4b2c16937214c6b2fbda6e676d96 refs/remotes/origin/flap-detection
+c5e25b51bfc2102dc797db4c82680e15324f2852 refs/remotes/origin/lockless-window
+2074adba5ddc7d5f7559448a9c3066573521c5bf refs/remotes/origin/master
+c834a510b3b6466f02621f08155c405fea79d4b9 refs/tags/v1.0.0
+6d5c2bd40d19d495aec62959198592e0cfa9e8cb refs/tags/v1.1.0
+17d0e758ce052224c2c9f7a06b29455421e6d77b refs/tags/v1.1.1
+51bfcdc094b74bace5ff2fa56563b2ad59e6bc69 refs/tags/v1.1.2
+5aa00be71832f69c8d62c00c7248cb8e51502cad refs/tags/v2.0.0
+1911c2c3a16f308b2e73d918f1823c3f16aea8f9 refs/tags/v2.0.1
+392136dbf69351cf203fc04d35702cbe1259f7e9 refs/tags/v2.0.2
+8578b1e1b253aaf7391c5b93e2b14fa8770a8c80 refs/tags/v2.1.0
+01b33f7a4dd8c543caa06b71dbd231715d8840a7 refs/tags/v2.1.1
+e454f25d0fdde0963da915ccbc11b649dd50e645 refs/tags/v2.1.2
+8ecef224ad6f03981310bdbfbddf59d8a08483c2 refs/tags/v2.1.3
+840a17d3cb5ac3570191707392aa5ea34e2b2bb1 refs/tags/v2.1.4
+cde416bc65d3358142e05e972ddd82abd8e22b7b refs/tags/v2.1.5
+b316a8dbaf83fc0e7550e675ce5985ab8b459e95 refs/tags/v2.1.6
+9847a81fdd0a9ec1b0794f1d5165841757b5aa12 refs/tags/v2.1.7
+7e3e7fbe9c62b943d487af023566a79d9eb22d3b refs/tags/v2.2.0
