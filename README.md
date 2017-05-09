@@ -1,7 +1,5 @@
 # wattpoll
 
-[![Build Status](https://travis-ci.com/liangdrew/wattpoll.svg?token=Ei3Bep18wxjyohCTAiSA&branch=master)](https://travis-ci.com/liangdrew/wattpoll)
-
 A Go microservice which supports the integration of polls in story parts within the [Wattpad](https://www.wattpad.com) app.
 
 <img src="./res/writer.gif" width="290" height="500" hspace="50"> <img src="./res/reader.gif" width="290" height="500">
